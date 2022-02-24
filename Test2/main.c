@@ -87,7 +87,7 @@ int main()
 	unsigned char array[4];
 	unsigned char time_array[6] = ";18:03;";
 	unsigned char date_array[8] = "09.01.22;";
-	unsigned char return_value[21];
+	unsigned char return_value[21] = "23/02/22/12/01/00.00<";
 	int adc_value;
 	char sign;
 	float avs = 0;
@@ -98,8 +98,8 @@ int main()
 	int n = 0;
 	int a = 0;
 	int b = 0;
-	int eeprom_address = 0x00;
-	int eeprom_address2 = 0x00;
+	uint16_t eeprom_address = 1;
+	uint16_t eeprom_address2 = 1;
 	unsigned char read_str[50];
 	
 	//Buttons init
@@ -111,25 +111,11 @@ int main()
 	
 	//turn_on_light();
 	sendstr("START\n");
-	eeprom_address = 0x00;
 	
 	while(1)
 	{
 			scan_LED_turn_on();
 			avs = make_measure();
-			//adc_value = ADC;
-			//ADC_measure(0);
-			/*
-			if(avs <= 0)	moisture_values = 0;
-			else
-			{
-				moisture = (avs*100.00)/550.00;
-				moisture_values = moisture;
-				dtostrf(moisture_values,3,2,array);
-				strcat(array,"%\n");
-			}
-			*/	
-			
 			
 			rxdata = receivebyte();
 			if(rxdata == 'a')
@@ -137,35 +123,28 @@ int main()
 				PORTB &= ~(1 << PB1);
 				PORTB &= ~(1 << PB2);
 				PORTB &= ~(1 << PB3);
-				sendstr("dupa\n");
 				
 				DELAY_sec(10);
 				
-				UART_Printf(" dupa\r\n");
 				PORTB = (1 << PB1);
 				PORTB = (1 << PB2);
 				PORTB = (1 << PB3);
 			}
 			else if(rxdata == 'b')
 			{
-				
-				//sendstr()
 				moisture = (avs*100.00)/550.00;
 				moisture_values = moisture;
 				dtostrf(moisture_values,3,2,array);
-				//strcat(array,"%\n");
 				UART_Printf(" %f\n",avs);
 				DELAY_sec(15);
-				//sendstr(array);
 				UART_Printf(array);
-				//UART_Printf("%f\n",avs);
 				//set_sleep_mode(SLEEP_MODE_IDLE);
 				DELAY_sec(15);
 				//}
 			}
 			else if(rxdata == 'c')
 			{
-				eeprom_address = 0x00;
+				eeprom_address = 1;
 				for(a = 0; a < 3; a++)
 				{
 					avs = make_measure();
@@ -190,12 +169,12 @@ int main()
 						}
 						*/
 						//return_value = {";18:03;09.01.22;00.00"};
-						EEPROM_WriteString(eeprom_address, ";18:03;09.01.22;00.00"); // Write the string at memoryLocation	0x00
+						EEPROM_WriteString(eeprom_address, "23/02/22/12/01/00.00"); // Write the string at memoryLocation	0x00
 						eeprom_address++;
 					}
 				}
 				
-				eeprom_address = 0x00;
+				eeprom_address = 1;
 				
 				//for(i = 0; i < 3; i++)
 				//{
@@ -208,11 +187,32 @@ int main()
 					DELAY_sec(15);
 				//}				
 			}
+			else if(rxdata == 'd')
+			{
+				char charr;
+				
+				for(j = 0; j <= 5; j++)
+				{
+					for(i = 0; i <= 20; i++)
+					{
+						charr = return_value[i];
+						EEPROM_WriteByte(eeprom_address,charr);
+						//sendbyte(charr);
+						eeprom_address++;
+					}
+				
+					for(i = 0; i <= 20; i++)
+					{
+						charr = EEPROM_ReadByte(eeprom_address2);
+						sendbyte(charr);
+						eeprom_address2++;
+					}
+				}
+			}
 			else
 			{}
 				
 		}
-		//check_moisture_value(moisture_values);
 		return 0;
 }
 
